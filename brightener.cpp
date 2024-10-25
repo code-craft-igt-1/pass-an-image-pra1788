@@ -1,32 +1,63 @@
 #include "brightener.h"
 
+Image::Image(int r, int c) : rows(r), columns(c) {
+    // Validate dimensions
+    if (r <= 0 || c <= 0) {
+        throw std::runtime_error("Invalid image dimensions.");
+    }
+
+    // Check for potential overflow
+    if (static_cast<long long>(r) * static_cast<long long>(c) > std::numeric_limits<size_t>::max()) {
+        throw std::runtime_error("Image size exceeds maximum allowable size.");
+    }
+
+    // Allocate memory for pixels using unique_ptr
+    pixels = std::make_unique<uint8_t[]>(r * c);
+}
+
+// Move constructor
+Image::Image(Image&& other) noexcept
+    : rows(other.rows), columns(other.columns), pixels(std::move(other.pixels)) {
+    other.rows = 0;   // Optional: reset the moved-from object's members
+    other.columns = 0; // Optional: reset the moved-from object's members
+}
+
+// Move assignment operator
+Image& Image::operator=(Image&& other) noexcept {
+    if (this != &other) {
+        rows = other.rows;
+        columns = other.columns;
+        pixels = std::move(other.pixels);
+
+        other.rows = 0;   // Optional: reset the moved-from object's members
+        other.columns = 0; // Optional: reset the moved-from object's members
+    }
+    return *this;
+}
+
 ImageBrightener::ImageBrightener(Image& inputImage) : m_inputImage(inputImage) {
 }
 
 int ImageBrightener::BrightenWholeImage() {
-	// For brightening, we add a certain grayscale (25) to every pixel.
-	// While brightening, some pixels may cross the max brightness. They are
-	// called 'attenuated' pixels
-	int attenuatedPixelCount = 0;
-	for (int x = 0; x < m_inputImage.rows; x++) {
-		for (int y = 0; y < m_inputImage.columns; y++) {
-			if (m_inputImage.pixels[x * m_inputImage.columns + y] > (255 - 25)) {
-				++attenuatedPixelCount;
-				// m_inputImage.pixels[x * m_inputImage.rows + 1 + y] = 255;
-				m_inputImage.pixels[x * m_inputImage.columns + y] = 255;
-			}
-			else {
-				// --attenuatedPixelCount;
-				// m_inputImage.pixels[x * m_inputImage.columns + y] += 25;
-				int pixelIndex = x * m_inputImage.columns + y;
-				m_inputImage.pixels[pixelIndex] += 25;
-				// m_inputImage.pixels[x * m_inputImage.rows + 1 + y] += 25;
-			}
-		}
-	}
-	return attenuatedPixelCount;
+    int attenuatedPixelCount = 0;
+    for (int x = 0; x < m_inputImage.rows; x++) {
+        for (int y = 0; y < m_inputImage.columns; y++) {
+            int pixelIndex = x * m_inputImage.columns + y;
+            uint8_t& pixel = m_inputImage.pixels[pixelIndex]; // Reference to the pixel for easier access
+
+            if (pixel > (255 - 25)) {
+                ++attenuatedPixelCount;
+                pixel = 255;
+            }
+            else {
+                pixel += 25;
+            }
+        }
+    }
+    return attenuatedPixelCount;
 }
 
-Image ImageBrightener::GetImage() {
-	return m_inputImage;
+Image& ImageBrightener::GetImage() {
+    return m_inputImage;
 }
+
