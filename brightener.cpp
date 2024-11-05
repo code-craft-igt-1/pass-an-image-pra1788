@@ -42,8 +42,7 @@ int ImageBrightener::BrightenWholeImage() {
     int attenuatedPixelCount = 0;
     for (int x = 0; x < m_inputImage.rows; x++) {
         for (int y = 0; y < m_inputImage.columns; y++) {
-            int pixelIndex = x * m_inputImage.columns + y;
-            uint8_t& pixel = m_inputImage.pixels[pixelIndex]; // Reference to the pixel for easier access
+            uint8_t& pixel = m_inputImage.GetPixel(x, y); // Access pixel via the Image's method
 
             if (pixel > (255 - 25)) {
                 ++attenuatedPixelCount;
@@ -57,7 +56,8 @@ int ImageBrightener::BrightenWholeImage() {
     return attenuatedPixelCount;
 }
 
-Image& ImageBrightener::GetImage() {
+
+const Image& ImageBrightener::GetImage() const {
     return m_inputImage;
 }
 

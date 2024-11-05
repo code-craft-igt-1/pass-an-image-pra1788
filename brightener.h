@@ -12,6 +12,15 @@ struct Image {
 
     Image(int r, int c);
 
+    // Accessor for pixel at (row, column)
+    uint8_t& GetPixel(int row, int col) {
+        return pixels[row * columns + col]; // This maintains the layout knowledge
+    }
+
+    const uint8_t& GetPixel(int row, int col) const {
+        return pixels[row * columns + col]; // Const version for read-only access
+    }
+
     // Move constructor
     Image(Image&& other) noexcept;
 
@@ -23,12 +32,13 @@ struct Image {
     Image& operator=(const Image&) = delete;
 };
 
+
 class ImageBrightener {
 private:
     Image& m_inputImage; // Reference to input image
 public:
     ImageBrightener(Image& inputImage);
     int BrightenWholeImage();
-    Image& GetImage(); // Return a reference to the Image
+    const Image& GetImage() const; // Return a reference to the Image
 };
 
